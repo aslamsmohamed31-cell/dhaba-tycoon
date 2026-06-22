@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dhaba Tycoon - Indian Diner Idle Simulator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=8">
+    <script src="game.js?v=8" defer></script>
+</head>
+<body>
+    <!-- Game Viewport Container -->
+    <div id="game-container">
+        <!-- Canvas for Game World -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Manual Cook Progress indicator -->
+        <div id="manual-cook-container" class="hidden">
+            <span id="cook-label">🍳 Cooking Dosa...</span>
+            <div class="progress-bar-outer">
+                <div id="manual-cook-progress"></div>
+            </div>
+        </div>
+
+        <!-- Top-Center Restaurant Name Display -->
+        <div id="restaurant-name-banner" class="hidden">
+            <h1 id="restaurant-name-text">Bharat Dhaba</h1>
+        </div>
+
+        <!-- Interactive Tutorial Banner -->
+        <div id="tutorial-banner" class="tutorial-container hidden">
+            <span class="tutorial-bullet">🎯</span>
+            <span id="tutorial-task-text">Unlock Table 1</span>
+            <button id="btn-skip-tutorial" class="skip-tutorial-btn" title="Skip onboarding tutorial">Skip</button>
+        </div>
+
+        <!-- HUD Layer -->
+        <div id="hud" class="hidden">
+            <!-- Cash Counter -->
+            <div class="hud-item cash-container">
+                <span class="hud-icon">💵</span>
+                <span id="hud-cash">₹0</span>
+            </div>
+
+            <!-- Game Progress Counter -->
+            <div class="hud-item level-container">
+                <div class="level-badge">🏆 Progress: <span id="hud-level">0%</span></div>
+                <div class="level-progress-bg">
+                    <div id="level-progress-bar"></div>
+                </div>
+                <span id="level-progress-text">0%</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="hud-buttons">
+                <button id="btn-upgrades" class="hud-btn" title="Upgrades & Pricing">🔧 Upgrades</button>
+                <button id="btn-settings" class="hud-btn" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Virtual Joystick for Mobile & Mouse -->
+        <div id="joystick-zone">
+            <div id="joystick-base">
+                <div id="joystick-handle"></div>
+            </div>
+        </div>
+
+        <!-- Camera Pan: Back to Player Button -->
+        <button id="btn-back-to-player" onclick="window.game && window.game.backToPlayer()" title="Return camera to player">
+            📍 Back to Player
+        </button>
+
+        <!-- Camera Pan Hint -->
+        <div id="cam-pan-hint">🖱️ Right-click drag to pan &nbsp;|&nbsp; 📱 Two-finger drag on mobile</div>
+
+        <!-- Combined Upgrades / Staff / Pricing Modal -->
+        <div id="shop-overlay" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔧 Dhaba Dashboard</h2>
+                    <button class="close-btn" id="btn-close-shop">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tabs">
+                        <button class="tab-btn active" id="btn-tab-player" data-tab="tab-pane-player">Player</button>
+                        <button class="tab-btn" id="btn-tab-staff" data-tab="tab-pane-staff">Staff</button>
+                    </div>
+                    
+                    <!-- Player Upgrades Tab -->
+                    <div id="tab-pane-player" class="tab-pane active">
+                        <div class="upgrade-item">
+                            <div class="upgrade-info">
+                                <h3>🏃 Player Speed</h3>
+                                <p>Walk faster around the Dhaba!</p>
+                                <span class="upgrade-level" id="lvl-player-speed">Lv. 1</span>
+                            </div>
+                            <button class="buy-btn" id="buy-player-speed">₹100</button>
+                        </div>
+                        <div class="upgrade-item">
+                            <div class="upgrade-info">
+                                <h3>🎒 Carry Capacity</h3>
+                                <p>Hold more plates of hot food / dirty dishes!</p>
+                                <span class="upgrade-level" id="lvl-player-capacity">Lv. 1</span>
+                            </div>
+                            <button class="buy-btn" id="buy-player-capacity">₹150</button>
+                        </div>
+                    </div>
+
+                    <!-- Staff Upgrades Tab -->
+                    <div id="tab-pane-staff" class="tab-pane">
+                        <div class="upgrade-item">
+                            <div class="upgrade-info">
+                                <h3>🏃 Worker Speed</h3>
+                                <p>Increase movement speed of hired serving workers.</p>
+                                <span class="upgrade-level" id="lvl-worker-speed">Lv. 1</span>
+                            </div>
+                            <button class="buy-btn" id="buy-worker-speed">₹200</button>
+                        </div>
+                        <div class="upgrade-item">
+                            <div class="upgrade-info">
+                                <h3>🎒 Worker Capacity</h3>
+                                <p>Allow hired workers to carry more plates at once.</p>
+                                <span class="upgrade-level" id="lvl-worker-capacity">Lv. 1</span>
+                            </div>
+                            <button class="buy-btn" id="buy-worker-capacity">₹250</button>
+                        </div>
+                        
+                        <h3 style="margin: 20px 0 10px 0; font-family: var(--font-heading); color: var(--primary-color); font-size: 0.95rem; font-weight: 800; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">🤖 Manage Serving Workers</h3>
+                        <div id="worker-management-list">
+                            <!-- Dynamically generated by JS -->
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-overlay" class="modal hidden">
+            <div class="modal-content small-modal">
+                <div class="modal-header">
+                    <h2>⚙️ Settings</h2>
+                    <button class="close-btn" id="btn-close-settings">&times;</button>
+                </div>
+                <div class="modal-body settings-body">
+                    <div class="setting-row">
+                        <span>Music / Sounds</span>
+                        <button id="btn-toggle-sound" class="toggle-btn on">ON</button>
+                    </div>
+                    <button id="btn-reset-game" class="danger-btn">🗑️ Reset Progress</button>
+                    <p class="settings-credit">developed by Mohamed Aslam</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start / Splash Screen -->
+        <div id="splash-screen">
+            <div class="splash-box">
+                <div class="splash-logo">🍲 Dhaba Tycoon 🍲</div>
+                <p class="splash-tagline">Build the ultimate South Indian hotel! Cook Idli, Dosa, Parotta, & more!</p>
+                
+                <div class="splash-instructions">
+                    <h3>📖 Dhaba Onboarding Guide</h3>
+                    
+                    <div class="instruction-grid">
+                        <div class="instruction-card">
+                            <span class="card-icon">🕹️</span>
+                            <div class="card-text">
+                                <h4>Movement & Controls</h4>
+                                <p>Use <strong>WASD / Arrow Keys</strong> or drag the <strong>Joystick</strong> anywhere on the screen to walk around the restaurant.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="instruction-card">
+                            <span class="card-icon">🍳</span>
+                            <div class="card-text">
+                                <h4>Cooking & Chefs</h4>
+                                <p>Stand next to preparation stations to cook manually (fills progress bar) or hire dedicated **Chefs** to automate it.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="instruction-card">
+                            <span class="card-icon">🍛</span>
+                            <div class="card-text">
+                                <h4>Serving & Buffers</h4>
+                                <p>Drop food onto Cashier counters or Dining tables. Seated customers consume matching food from the table stack.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="instruction-card">
+                            <span class="card-icon">🧼</span>
+                            <div class="card-text">
+                                <h4>Cleaning & Washing</h4>
+                                <p>Seated customers leave dirty empty plates. Take plates to the top-left washing machine to clean them and unlock seats.</p>
+                            </div>
+                        </div>
+
+                        <div class="instruction-card" style="grid-column: span 1;">
+                            <span class="card-icon">🤖</span>
+                            <div class="card-text">
+                                <h4>Staff Automation</h4>
+                                <p>Stand on unlock circles to hire serving **Workers** who automatically deliver dishes, sweep plates, and collect tip drops!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-card" style="margin-top: 15px; width: 100%; max-width: 340px; text-align: left; background: rgba(255, 255, 255, 0.03); border: 1.5px dashed rgba(255, 153, 0, 0.3); padding: 12px 18px; border-radius: 12px; box-sizing: border-box;">
+                    <label for="restaurant-name-input" style="font-family: var(--font-heading); color: var(--primary-color); font-size: 0.85rem; font-weight: 800; display: block; margin-bottom: 6px; text-align: center;">🏷️ Name Your Dhaba:</label>
+                    <input type="text" id="restaurant-name-input" placeholder="e.g. Bharat Dhaba" value="Bharat Dhaba" maxlength="25" style="width: 100%; background: rgba(255, 255, 255, 0.06); border: 1.5px solid var(--primary-color); border-radius: 10px; color: white; padding: 10px 14px; font-family: var(--font-heading); font-size: 1.05rem; outline: none; box-sizing: border-box; text-align: center; font-weight: 600;" />
+                </div>
+                
+                <button id="btn-start" class="start-btn">Start Serving! 🍽️</button>
+            </div>
+        </div>
+        
+        <!-- Game Over / Victory Overlay -->
+        <div id="victory-overlay" class="modal hidden">
+            <div class="modal-content victory-box">
+                <div class="splash-logo">🎉 Dhaba Legend! 🎉</div>
+                <p>Thanks for playing! You have unlocked all Indian food recipes, hired all staff, upgraded all sofas, and built the busiest Dhaba in town!</p>
+                <div class="victory-stats">
+                    <p>Total Revenue Earned: <strong id="vic-revenue">₹0</strong></p>
+                    <p>Customers Served: <strong id="vic-customers">0</strong></p>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                    <button id="btn-victory-continue" class="start-btn" style="margin-top: 0; padding: 12px 24px; font-size: 1rem;">Continue Building Dhaba 👨‍🍳</button>
+                    <button id="btn-victory-reset" class="start-btn danger-btn" style="margin-top: 0; padding: 12px 24px; font-size: 1rem; color: white; background: #ff3300; box-shadow: 0 4px 12px rgba(255, 51, 0, 0.3);">Reset Progress 🗑️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
